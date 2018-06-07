@@ -16,6 +16,14 @@ fi
 if [ ! -f ~/.ssh/id_rsa ]; then
   ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa
 fi
+CSVS=$(ls | grep ".csv")
+for CSV in $CSVS; do
+  MEMBERS=$(sed s/","/" "/g $CSV)
+  for MEMBER in $MEMBERS; do
+    ./auto-cp-ssh-id.sh root $PASSWD $MEMBER
+  done
+done
+if false; then
 MASTER=$(sed s/","/" "/g ./master.csv)
 for ip in $MASTER; do
   ./auto-cp-ssh-id.sh root $PASSWD $ip 
@@ -24,3 +32,4 @@ NODE=$(sed s/","/" "/g ./node.csv)
 for ip in $NODE; do
   ./auto-cp-ssh-id.sh root $PASSWD $ip 
 done
+fi
