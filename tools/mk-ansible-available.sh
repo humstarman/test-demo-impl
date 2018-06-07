@@ -20,6 +20,23 @@ function getScript(){
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - config /etc/ansible/hosts."
 #cat > /etc/ansible/hosts << EOF
 ANSIBLE=/etc/ansible/hosts
+[ -f "$ANSIBLE" ] && rm -f $ANSIBLE
+[ -f "$ANSIBLE" ] || touch $ANSIBLE
+CSVS=$(ls | grep ".csv")
+for CSV in $CSVS; do
+  GROUP=$CSV
+  GROUP=${GROUP##*/}
+  GROUP=${GROUP%.*}
+  cat >> $ANSIBLE << EOF 
+[$GROUP]
+EOF
+  MEMBERS=$(sed s/","/" "/g $CSV)
+  for MEMBER in $MEMBERS; do
+    echo $MEMBER >> $ANSIBLE
+  done
+  echo "" >> $ANSIBLE
+done
+if false; then
 echo "[master]" > $ANSIBLE
 for ip in $MASTER; do
   echo $ip >> $ANSIBLE
@@ -30,10 +47,11 @@ if $NODE_EXISTENCE; then
     echo $ip >> $ANSIBLE
   done
 fi
+fi
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - /etc/ansible/hosts configured."
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - check connectivity amongst hosts ..."
-getScript $URL auto-cp-ssh-id.sh
-getScript $URL mk-ssh-conn.sh
+getScript $URL/tools auto-cp-ssh-id.sh
+getScript $URL/tools mk-ssh-conn.sh
 if [[ -f ./passwd.log && -n "$(cat ./passwd.log)" ]]; then
   echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - as ./passwd.log existed, automated make ssh connectivity."
   ./mk-ssh-conn.sh $(cat ./passwd.log)
@@ -60,8 +78,8 @@ if false; then
     echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [ERROR] - connectivity checking failed."
     echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [ERROR] - you should make ssh connectivity without password from this host to all the other hosts."
     # fix ssh 
-    getScript $URL auto-cp-ssh-id.sh
-    getScript $URL mk-ssh-conn.sh
+    getScript $URL/tools auto-cp-ssh-id.sh
+    getScript $URL/tools mk-ssh-conn.sh
     if [[ -f ./passwd.log && -n "$(cat ./passwd.log)" ]]; then
       echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - as ./passwd.log existed, automated make ssh connectivity."
       ./mk-ssh-conn.sh $(cat ./passwd.log)
