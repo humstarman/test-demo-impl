@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: ingress-nginx 
+  labels:
+    app: ingress-nginx
+  name: ingress-nginx
+spec:
+  type: ClusterIP
+  clusterIP: 10.254.0.80
+  selector:
+    app: ingress-nginx
+  ports:
+    - port: 80 
+      targetPort: 80 
+      name: http 
+    - port: 443 
+      targetPort: 443 
+      name: https
