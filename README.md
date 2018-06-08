@@ -2,5 +2,5 @@
 
 url:  
 ```bash
-https://raw.githubusercontent.com/humstarman/k8s-install-tool-scripts/master/
+https://github.com/humstarman/test-demo-impl
 ```
