@@ -26,7 +26,7 @@ function getScript(){
   curl -s -o ./$SCRIPT $URL/$SCRIPT
   chmod +x ./$SCRIPT
 }
-getScript $URL docker-config.sh
+getScript $URL/tools docker-config.sh
 
 # 1 download and install docker 
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - download docker ... "

@@ -2,41 +2,19 @@
 
 set -e
 
-# 1 generate admin pem
-echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - generate admin pem ... "
-mkdir -p ./ssl/admin
-FILE=./ssl/admin/admin-csr.json
-cat > $FILE << EOF
-{
-  "CN": "admin",
-  "hosts": [],
-  "key": {
-    "algo": "rsa",
-    "size": 2048
-  },
-  "names": [
-    {
-      "C": "CN",
-      "ST": "BeiJing",
-      "L": "BeiJing",
-      "O": "system:masters",
-      "OU": "System"
-    }
-  ]
-}
-EOF
-cd ./ssl/admin && \
-  cfssl gencert -ca=/etc/kubernetes/ssl/ca.pem \
-    -ca-key=/etc/kubernetes/ssl/ca-key.pem \
-    -config=/etc/kubernetes/ssl/ca-config.json \
-    -profile=kubernetes admin-csr.json | cfssljson -bare admin && \
+# 1 cp admin pem
+echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - cp admin pem ... "
+TMP=/tmp/admin-ssl
+SSL=/etc/kubernetes/ssl 
+[ -d "$TMP" ] && rm -rf $TMP
+mkdir -p $TMP
+cd $SSL && \
+  yes | cp admin-key.pem admin.pem $TMP && \
   cd -
+ansible new -m copy -a "src=${TMP}/ dest=/etc/kubernetes/ssl"
 
-# 2 distribute admin pem
-echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - distribute admin pem ... "
-ansible all -m copy -a "src=./ssl/admin/ dest=/etc/kubernetes/ssl"
-
-# 3 generate kubectl kubeconfig
+# 2 generate kubectl kubeconfig
+echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - generate kubectl kubeconfig ... "
 FILE=mk-kubectl-kubeconfig.sh
 cat > $FILE << EOF
 #!/bin/bash
@@ -73,4 +51,5 @@ if [ -z "\$IF0" ]; then
   echo 'source <(kubectl completion bash)' >> /etc/profile
 fi
 EOF
-ansible all -m script -a ./mk-kubectl-kubeconfig.sh
+ansible new -m script -a ./mk-kubectl-kubeconfig.sh
+exit 0

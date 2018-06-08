@@ -1,6 +1,8 @@
 #!/bin/bash
 
 set -e
+
+# 0 set env
 :(){
   FILES=$(find /var/env -name "*.env")
 
@@ -26,83 +28,49 @@ function getScript(){
   curl -s -o ./$SCRIPT $URL/$SCRIPT
   chmod +x ./$SCRIPT
 }
-getScript $URL docker-config.sh
+getScript $URL/tools docker-config.sh
 
-# 1 download and install docker 
-echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - download docker ... "
-DOCKER_VER=18.03.1
-URL=https://download.docker.com/linux/static/stable/x86_64
-if [ ! -f docker-${DOCKER_VER}-ce.tgz ]; then
-  while true; do
-    wget $URL/docker-${DOCKER_VER}-ce.tgz && break
-  done
-fi
-if [[ ! -x "$(command -v docker)" ]]; then
-  while true; do
-    tar -zxvf docker-${DOCKER_VER}-ce.tgz 
-    echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - distribute docker ... "
-    ansible all -m copy -a "src=./docker/ dest=/usr/local/bin mode='a+x'"
-    if [[ -x "$(command -v docker)" ]]; then
-      echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - docker $DOCKER_VER installed."
-      break
-    fi
-  done
-else
-  echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - docker already existed. "
-fi
-
-# 2 config docker
-ansible all -m script -a ./docker-config.sh
-
-# 3 deploy docker
-mkdir -p ./systemd-unit
-FILE=./systemd-unit/docker.service
-cat > $FILE << EOF
-[Unit]
-Description=Docker Application Container Engine
-Documentation=http://docs.docker.io
-
-[Service]
-EnvironmentFile=-/run/flannel/docker
-ExecStart=/usr/local/bin/dockerd --log-level=error \$DOCKER_NETWORK_OPTIONS
-ExecReload=/bin/kill -s HUP \$MAINPID
-Restart=on-failure
-RestartSec=5
-LimitNOFILE=infinity
-LimitNPROC=infinity
-LimitCORE=infinity
-Delegate=yes
-KillMode=process
-
-[Install]
-WantedBy=multi-user.target
-EOF
-FILE=${FILE##*/}
+# 1 deploy docker
+COMPONENT=docker
+## 1.1 cp docker 
+echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - cp $COMPONENT component... "
+BIN=/usr/local/bin
+TMP=/tmp/$COMPONENT-component
+[ -d "$TMP" ] && rm -rf $TMP
+mkdir -p $TMP
+cd $BIN && \
+  yes | cp docker docker-containerd docker-containerd-ctr docker-containerd-shim dockerd docker-init docker-proxy docker-runc $TMP && \
+  cd -
+ansible new -m copy -a "src=${TMP}/ dest=$BIN mode='a+x'"
+echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - $COMPONENT components distributed."
+## 1.2 config docker
+ansible new -m script -a ./docker-config.sh
+## 1.3 cp docker systemd unit
+SYSTEMD=/etc/systemd/system
+FILE=${COMPONENT}.service
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - distribute $FILE ... "
-ansible all -m copy -a "src=./systemd-unit/$FILE dest=/etc/systemd/system"
+ansible new -m copy -a "src=${SYSTEMD}/$FILE dest=${SYSTEMD}"
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - start $FILE ... "
-ansible all -m shell -a "systemctl daemon-reload"
-ansible all -m shell -a "systemctl enable $FILE"
-ansible all -m shell -a "systemctl restart $FILE"
-# check config
+ansible new -m shell -a "systemctl daemon-reload"
+ansible new -m shell -a "systemctl enable $FILE"
+ansible new -m shell -a "systemctl restart $FILE"
+echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - $FILE deployed."
+## 1.4 check docker config
 TARGET='10.0.0.0/8'
 while true; do
   if docker info | grep $TARGET; then
     break
   else
     sleep 1
-    ansible all -m shell -a "systemctl daemon-reload"
-    ansible all -m shell -a "systemctl restart $FILE"
+    ansible new -m shell -a "systemctl daemon-reload"
+    ansible new -m shell -a "systemctl restart $FILE"
   fi
 done
-echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - docker $DOCKER_VER deployed."
+echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - $COMPONENT deployed."
 
-# 4 deploy kubelet
-## generate system:node-bootstrapper
-if ! kubectl get clusterrolebindings | grep kubelet-bootstrap; then
-  kubectl create clusterrolebinding kubelet-bootstrap --clusterrole=system:node-bootstrapper --user=kubelet-bootstrap
-fi
-## generate kubelet bootstrapping kubeconfig
+# 2 deploy kubelet
+COMPONENT=kubelet
+## 2.1 generate kubelet bootstrapping kubeconfig
 FILE=mk-kubelet-kubeconfig.sh
 cat > $FILE << EOF
 #!/bin/bash
@@ -135,90 +103,31 @@ kubectl config set-context default \\
 kubectl config use-context default --kubeconfig=bootstrap.kubeconfig
 mv bootstrap.kubeconfig /etc/kubernetes/
 EOF
-ansible all -m script -a ./$FILE
-##  generate kubelet systemd unit
-mkdir -p ./systemd-unit
-FILE=./systemd-unit/kubelet.service
-cat > $FILE << EOF
-[Unit]
-Description=Kubernetes Kubelet
-Documentation=https://github.com/GoogleCloudPlatform/kubernetes
-After=docker.service
-Requires=docker.service
-
-[Service]
-EnvironmentFile=-/var/env/env.conf
-WorkingDirectory=/var/lib/kubelet
-ExecStart=/usr/local/bin/kubelet \\
-  --fail-swap-on=false \\
-  --pod-infra-container-image=registry.access.redhat.com/rhel7/pod-infrastructure:latest \\
-  --cgroup-driver=cgroupfs \\
-  --address=\${NODE_IP} \\
-  --hostname-override=\${NODE_IP} \\
-  --bootstrap-kubeconfig=/etc/kubernetes/bootstrap.kubeconfig \\
-  --kubeconfig=/etc/kubernetes/kubelet.kubeconfig \\
-  --cert-dir=/etc/kubernetes/ssl \\
-  --cluster-dns=\${CLUSTER_DNS_SVC_IP} \\
-  --cluster-domain=\${CLUSTER_DNS_DOMAIN} \\
-  --hairpin-mode promiscuous-bridge \\
-  --allow-privileged=true \\
-  --serialize-image-pulls=false \\
-  --logtostderr=true \\
-  --pod-manifest-path=/etc/kubernetes/manifests \\
-  --v=2
-ExecStartPost=/sbin/iptables -A INPUT -s 10.0.0.0/8 -p tcp --dport 4194 -j ACCEPT
-ExecStartPost=/sbin/iptables -A INPUT -s 172.17.0.0/12 -p tcp --dport 4194 -j ACCEPT
-ExecStartPost=/sbin/iptables -A INPUT -s 192.168.1.0/16 -p tcp --dport 4194 -j ACCEPT
-ExecStartPost=/sbin/iptables -A INPUT -p tcp --dport 4194 -j DROP
-Restart=on-failure
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-EOF
-FILE=${FILE##*/}
+ansible new -m script -a ./$FILE
+##  2.2 cp kubelet systemd unit
+SYSTEMD=/etc/systemd/system
+FILE=${COMPONENT}.service
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - distribute $FILE ... "
-ansible all -m copy -a "src=./systemd-unit/$FILE dest=/etc/systemd/system"
+ansible new -m copy -a "src=${SYSTEMD}/$FILE dest=${SYSTEMD}"
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - start $FILE ... "
-ansible all -m shell -a "systemctl daemon-reload"
-ansible all -m shell -a "systemctl enable $FILE"
-ansible all -m shell -a "systemctl restart $FILE"
+ansible new -m shell -a "systemctl daemon-reload"
+ansible new -m shell -a "systemctl enable $FILE"
+ansible new -m shell -a "systemctl restart $FILE"
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - $FILE deployed."
 
-# 5 deploy kube-proxy 
-## generate kube-proxy pem
-echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - generate kube-proxy pem ... "
-SSL_DIR=./ssl/kube-proxy
-mkdir -p $SSL_DIR 
-FILE=$SSL_DIR/kube-proxy-csr.json
-cat > $FILE << EOF
-{
-  "CN": "system:kube-proxy",
-  "hosts": [],
-  "key": {
-    "algo": "rsa",
-    "size": 2048
-  },
-  "names": [
-    {
-      "C": "CN",
-      "ST": "BeiJing",
-      "L": "BeiJing",
-      "O": "k8s",
-      "OU": "System"
-    }
-  ]
-}
-EOF
-cd $SSL_DIR && \
-  cfssl gencert -ca=/etc/kubernetes/ssl/ca.pem \
-  -ca-key=/etc/kubernetes/ssl/ca-key.pem \
-  -config=/etc/kubernetes/ssl/ca-config.json \
-  -profile=kubernetes  kube-proxy-csr.json | cfssljson -bare kube-proxy && \
+# 3 deploy kube-proxy 
+COMPONENT=kube-proxy
+## 3.1 cp kube-proxy pem
+echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - cp $COMPONENT pem ... "
+TMP=/tmp/${COMPONENT}-ssl
+SSL=/etc/kubernetes/ssl
+[ -d "$TMP" ] && rm -rf $TMP
+mkdir -p $TMP
+cd $SSL && \
+  yes | cp ${COMPONENT}-key.pem ${COMPONENT}.pem $TMP && \
   cd -
-echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - distribute kube-proxy pem ... "
-ansible all -m copy -a "src=${SSL_DIR}/ dest=/etc/kubernetes/ssl"
-## generate kube-proxy bootstrapping kubeconfig
+ansible new -m copy -a "src=${TMP}/ dest=$SSL"
+## 3.2 generate kube-proxy bootstrapping kubeconfig
 FILE=mk-kube-proxy-kubeconfig.sh
 cat > $FILE << EOF
 #!/bin/bash
@@ -253,59 +162,26 @@ kubectl config set-context default \\
 kubectl config use-context default --kubeconfig=kube-proxy.kubeconfig
 mv kube-proxy.kubeconfig /etc/kubernetes/
 EOF
-ansible all -m script -a ./$FILE
-##  generate kube-proxy systemd unit
-mkdir -p ./systemd-unit
-FILE=./systemd-unit/kube-proxy.service
-cat > $FILE << EOF
-[Unit]
-Description=Kubernetes Kube-Proxy Server
-Documentation=https://github.com/GoogleCloudPlatform/kubernetes
-After=network.target
-
-[Service]
-EnvironmentFile=-/var/env/env.conf
-WorkingDirectory=/var/lib/kube-proxy
-ExecStart=/usr/local/bin/kube-proxy \\
-  --bind-address=\${NODE_IP} \\
-  --hostname-override=\${NODE_IP} \\
-  --cluster-cidr=\${SERVICE_CIDR} \\
-  --kubeconfig=/etc/kubernetes/kube-proxy.kubeconfig \\
-  --logtostderr=true \\
-  --masquerade-all \\
-  --v=2
-Restart=on-failure
-RestartSec=5
-LimitNOFILE=65536
-
-[Install]
-WantedBy=multi-user.target
-EOF
-FILE=${FILE##*/}
+ansible new -m script -a ./$FILE
+##  3.3 cp kube-proxy systemd unit
+SYSTEMD=/etc/systemd/system
+FILE=${COMPONENT}.service
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - distribute $FILE ... "
-ansible all -m copy -a "src=./systemd-unit/$FILE dest=/etc/systemd/system"
+ansible new -m copy -a "src=${SYSTEMD}/$FILE dest=${SYSTEMD}"
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - start $FILE ... "
-ansible all -m shell -a "systemctl daemon-reload"
-ansible all -m shell -a "systemctl enable $FILE"
-ansible all -m shell -a "systemctl restart $FILE"
+ansible new -m shell -a "systemctl daemon-reload"
+ansible new -m shell -a "systemctl enable $FILE"
+ansible new -m shell -a "systemctl restart $FILE"
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - $FILE deployed."
 
-# 6 deply HA based on nginx
-NODE_EXISTENCE=true
-if [ ! -f ./node.csv ]; then
-  NODE_EXISTENCE=false
-else
-  if [ -z "$(cat ./node.csv)" ]; then
-    NODE_EXISTENCE=false
-  fi
-fi
-if $NODE_EXISTENCE; then
-  ## generate nginx.conf
-  MASTER=$(sed s/","/" "/g ./master.csv)
-  DOCKER=$(which docker)
-  NGINX_CONF_DIR=/etc/nginx
-  FILE=nginx.conf
-  cat > $FILE << EOF
+# 4 deply HA based on nginx
+COMPONENT=nginx-proxy
+## 4.1 generate nginx.conf
+MASTER=$(sed s/","/" "/g ./master.csv)
+DOCKER=$(which docker)
+NGINX_CONF_DIR=/etc/nginx
+FILE=nginx.conf
+cat > $FILE << EOF
 error_log stderr notice;
 
 worker_processes auto;
@@ -319,12 +195,12 @@ stream {
     upstream kube_apiserver {
         least_conn;
 EOF
-  for ip in $MASTER; do
-    cat >> $FILE << EOF
+for ip in $MASTER; do
+  cat >> $FILE << EOF
         server $ip:6443;
 EOF
-  done
-  cat >> $FILE << EOF
+done
+cat >> $FILE << EOF
     }
 
     server {
@@ -335,12 +211,15 @@ EOF
     }
 }
 EOF
-  ansible node -m shell -a "[ -d "$NGINX_CONF_DIR" ] || mkdir -p "$NGINX_CONF_DIR""
-  ansible node -m copy -a "src=$FILE dest=$NGINX_CONF_DIR"
-  ## generate nginx-proxy.service
-  mkdir -p ./systemd-unit
-  FILE=./systemd-unit/nginx-proxy.service
-  cat > $FILE << EOF
+ansible new -m shell -a "[ -d "$NGINX_CONF_DIR" ] || mkdir -p "$NGINX_CONF_DIR""
+ansible new -m copy -a "src=$FILE dest=$NGINX_CONF_DIR"
+## 4.2 generate nginx-proxy.service
+SYSTEMD=/etc/systemd/system
+TMP=/tmp/${COMPONENT}-systemd-unit
+[ -d "${TMP}" ] && rm -rf $TMP
+mkdir -p $TMP 
+FILE=$TMP/${COMPONENT}.service
+cat > $FILE << EOF
 [Unit]
 Description=kubernetes apiserver docker wrapper
 Wants=docker.socket
@@ -365,12 +244,12 @@ TimeoutStartSec=30s
 [Install]
 WantedBy=multi-user.target
 EOF
-  FILE=${FILE##*/}
-  echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - distribute $FILE ... "
-  ansible node -m copy -a "src=./systemd-unit/$FILE dest=/etc/systemd/system"
-  echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - start $FILE ... "
-  ansible node -m shell -a "systemctl daemon-reload"
-  ansible node -m shell -a "systemctl enable $FILE"
-  ansible node -m shell -a "systemctl restart $FILE"
-  echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - HA nodes deployed."  
-fi
+FILE=${FILE##*/}
+echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - distribute $FILE ... "
+ansible new -m copy -a "src=./systemd-unit/$FILE dest=/etc/systemd/system"
+echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - start $FILE ... "
+ansible new -m shell -a "systemctl daemon-reload"
+ansible new -m shell -a "systemctl enable $FILE"
+ansible new -m shell -a "systemctl restart $FILE"
+echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - HA nodes deployed."  
+exit 0

@@ -115,5 +115,4 @@ EOF
 FILE=${FILE##*/}
 systemctl daemon-reload
 systemctl enable $FILE 
-
 exit 0
