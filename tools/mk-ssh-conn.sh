@@ -20,7 +20,7 @@ CSVS=$(ls | grep ".csv")
 for CSV in $CSVS; do
   MEMBERS=$(sed s/","/" "/g $CSV)
   for MEMBER in $MEMBERS; do
-    ./auto-cp-ssh-id.sh root $PASSWD $MEMBER
+    [ -z "$MEMBER" ] || ./auto-cp-ssh-id.sh root $PASSWD $MEMBER
   done
 done
 if false; then

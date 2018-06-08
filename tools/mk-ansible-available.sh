@@ -52,18 +52,11 @@ echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - /etc/ansible/hosts config
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - check connectivity amongst hosts ..."
 getScript $URL/tools auto-cp-ssh-id.sh
 getScript $URL/tools mk-ssh-conn.sh
+getScript $URL/tools check-python.sh
 if [[ -f ./passwd.log && -n "$(cat ./passwd.log)" ]]; then
   echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - as ./passwd.log existed, automated make ssh connectivity."
   ./mk-ssh-conn.sh $(cat ./passwd.log)
-  for ip in $MASTER; do
-    ssh -t root@$ip "if [ ! -x "$(command -v python)" ]; then if [ -x "$(command -v yum)" ]; then yum install -y python; fi; if [ -x "$(command -v apt-get)" ]; then apt-get install -y python; fi; fi"
-  done
-  if $NODE_EXISTENCE; then
-    NODE=$(sed s/","/" "/g ./node.csv)
-    for ip in $NODE; do
-      ssh -t root@$ip "if [ ! -x "$(command -v python)" ]; then if [ -x "$(command -v yum)" ]; then yum install -y python; fi; if [ -x "$(command -v apt-get)" ]; then apt-get install -y python; fi; fi"
-    done
-  fi
+  ./check-python.sh
 fi
 if ! ansible all -m ping; then
   echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [ERROR] - connectivity checking failed."
