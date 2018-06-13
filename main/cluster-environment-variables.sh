@@ -9,15 +9,16 @@ else
   sleep 3
   exit 1 
 fi
+TOOLS=${URL}/tools
 function getScript(){
   URL=$1
   SCRIPT=$2
   curl -s -o ./$SCRIPT $URL/$SCRIPT
   chmod +x ./$SCRIPT
 }
-getScript $URL deal-env.sh
-getScript $URL mk-env-conf.sh
-getScript $URL put-this-ip.sh
+getScript $TOOLS deal-env.sh
+getScript $TOOLS mk-env-conf.sh
+getScript $TOOLS put-this-ip.sh
 if $NODE_EXISTENCE; then
   getScript $URL put-node-ip.sh
 fi
