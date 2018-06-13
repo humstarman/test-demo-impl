@@ -31,7 +31,6 @@ function getScript(){
     sleep 3
     exit 1
   fi
-
 }
 
 # config /etc/ansible/hosts
