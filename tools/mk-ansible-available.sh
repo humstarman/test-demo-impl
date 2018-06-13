@@ -39,7 +39,7 @@ echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - config /etc/ansible/hosts
 ANSIBLE=/etc/ansible/hosts
 [ -f "$ANSIBLE" ] && rm -f $ANSIBLE
 [ -f "$ANSIBLE" ] || touch $ANSIBLE
-CSVS=$(ls | grep ".csv")
+CSVS=$(ls | grep -E ".csv$")
 for CSV in $CSVS; do
   GROUP=$CSV
   GROUP=${GROUP##*/}

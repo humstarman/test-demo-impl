@@ -16,7 +16,7 @@ fi
 if [ ! -f ~/.ssh/id_rsa ]; then
   ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa
 fi
-CSVS=$(ls | grep ".csv")
+CSVS=$(ls | grep -E ".csv$")
 for CSV in $CSVS; do
   MEMBERS=$(sed s/","/" "/g $CSV)
   for MEMBER in $MEMBERS; do

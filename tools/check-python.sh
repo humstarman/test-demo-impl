@@ -1,5 +1,5 @@
 #!/bin/bash
-CSVS=$(ls | grep ".csv")
+CSVS=$(ls | grep -E ".csv$")
 for CSV in $CSVS; do
   MEMBERS=$(sed s/","/" "/g $CSV)
   for ip in $MEMBERS; do
