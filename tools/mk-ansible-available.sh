@@ -10,10 +10,26 @@ else
   exit 1
 fi
 function getScript(){
+  TRY=10
   URL=$1
   SCRIPT=$2
-  curl -s -o ./$SCRIPT $URL/$SCRIPT
-  chmod +x ./$SCRIPT
+  for i in $(seq -s " " 1 ${TRY}); do
+    curl -s -o ./$SCRIPT $URL/$SCRIPT
+    if cat ./$SCRIPT | grep "404: Not Found"; then
+      rm -f ./$SCRIPT
+    else
+      break
+    fi
+  done
+  if [ -f "./$SCRIPT" ]; then
+    chmod +x ./$SCRIPT
+  else
+    echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [ERROR] - downloading failed !!!" 
+    echo " - $URL/$SCRIPT"
+    echo " - Please check !!!"
+    sleep 3
+    exit 1
+  fi
 }
 
 # config /etc/ansible/hosts
