@@ -9,4 +9,4 @@ TMP=/tmp/k8s/bak
 [ -d "$TMP" ] && rm -rf $TMP
 mkdir -p $TMP
 cp ./*.csv ./info.env ./*.ba.sh passwd.log $TMP
-ansible master -m copy "src=${TMP}/ dest=${BAK}"
+ansible master -m copy -a "src=${TMP}/ dest=${BAK}"
