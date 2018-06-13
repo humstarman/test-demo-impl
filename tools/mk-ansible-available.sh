@@ -9,6 +9,7 @@ else
   sleep 3
   exit 1
 fi
+TOOLS=$URL/tools
 function getScript(){
   TRY=10
   URL=$1
@@ -67,9 +68,9 @@ fi
 fi
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - /etc/ansible/hosts configured."
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - check connectivity amongst hosts ..."
-getScript $URL/tools auto-cp-ssh-id.sh
-getScript $URL/tools mk-ssh-conn.sh
-getScript $URL/tools check-python.sh
+getScript $TOOLS auto-cp-ssh-id.sh
+getScript $TOOLS mk-ssh-conn.sh
+getScript $TOOLS check-python.sh
 if [[ -f ./passwd.log && -n "$(cat ./passwd.log)" ]]; then
   echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - as ./passwd.log existed, automated make ssh connectivity."
   ./mk-ssh-conn.sh $(cat ./passwd.log)
