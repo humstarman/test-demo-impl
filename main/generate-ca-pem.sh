@@ -22,9 +22,9 @@ if [[ ! -f cfssl || ! -f cfssljson || ! -f cfssl-certinfo ]]; then
   done
 else
   echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - CFSSL already existed. "
-  mv cfssl_linux-amd64 /usr/local/bin/cfssl
-  mv cfssljson_linux-amd64 /usr/local/bin/cfssljson
-  mv cfssl-certinfo_linux-amd64 /usr/local/bin/cfssl-certinfo
+  mv cfssl /usr/local/bin/cfssl
+  mv cfssljson /usr/local/bin/cfssljson
+  mv cfssl-certinfo /usr/local/bin/cfssl-certinfo
 fi
 
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - generate CA pem ... "
