@@ -44,6 +44,7 @@ cd $BIN && \
 ansible new -m copy -a "src=${TMP}/ dest=$BIN mode='a+x'"
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - $COMPONENT components distributed."
 ## 1.2 config docker
+echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - configure $COMPONENT ..."
 ansible new -m script -a ./docker-config.sh
 ## 1.3 cp docker systemd unit
 SYSTEMD=/etc/systemd/system
