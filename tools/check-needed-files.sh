@@ -23,25 +23,29 @@ done
 if [[ "$N_NEED" != "$i" ]]; then
   echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [WARN] - missing files, backup now ..." 
   getBackup
-fi
-i=0
-for NEED in $NEEDS; do
-  if [ -z "$(ls | grep -E "^${NEED}$")" ]; then
-    echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [WARN] - missing ${NEED}" 
-  else
-    i=$[$i+1]
-  fi
-done
-if [[ "$N_NEED" != "$i" ]]; then
-  echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [ERROR] - missing files !!!" 
-  echo " - all files below are needed:"
-  echo ""
+  i=0
   for NEED in $NEEDS; do
-    echo " - $NEED"
+    if [ -z "$(ls | grep -E "^${NEED}$")" ]; then
+      echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [WARN] - missing ${NEED}" 
+    else
+      i=$[$i+1]
+    fi
   done
-  echo ""
-  echo " - please check."
-  sleep 3 
-  exit 1
+  if [[ "$N_NEED" != "$i" ]]; then
+    echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [ERROR] - missing files !!!" 
+    echo " - all files below are needed:"
+    echo ""
+    for NEED in $NEEDS; do
+      echo " - $NEED"
+    done
+    echo ""
+    echo " - please check."
+    sleep 3 
+    exit 1
+  else
+    echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - restored from backup." 
+  fi
+else
+  echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - all needed files found." 
 fi
 exit 0
