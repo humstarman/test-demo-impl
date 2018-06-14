@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # 0 set env
+source ./info.env
 function getScript(){
   URL=$1
   SCRIPT=$2
