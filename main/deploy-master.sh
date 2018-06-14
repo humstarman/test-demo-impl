@@ -68,7 +68,13 @@ ansible master -m copy -a "src=./ssl/kubernetes/ dest=/etc/kubernetes/ssl"
 N2SET=3
 MASTER=$(sed s/","/" "/g ./master.csv)
 N_MASTER=$(echo $MASTER | wc | awk -F ' ' '{print $2}')
-[[ "$N_MASTER" > "$N2SET" ]] && N2SET=$N_MASTER
+if [[ "$N_MASTER" > "$N2SET" ]]; then
+  if [[ "$[${N_MASTER}%2]" == "1" ]]; then
+    N2SET=$N_MASTER
+  else
+    N2SET=$[${N_MASTER}+1]
+  fi
+fi
   
 # 5 deploy kube-apiserver
 mkdir -p ./systemd-unit
