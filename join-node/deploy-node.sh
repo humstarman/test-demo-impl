@@ -220,6 +220,7 @@ TMP=/tmp/${COMPONENT}-systemd-unit
 [ -d "${TMP}" ] && rm -rf $TMP
 mkdir -p $TMP 
 FILE=$TMP/${COMPONENT}.service
+FULL_PATH_FILE=$TMP/${COMPONENT}.service
 cat > $FILE << EOF
 [Unit]
 Description=kubernetes apiserver docker wrapper
@@ -247,7 +248,7 @@ WantedBy=multi-user.target
 EOF
 FILE=${FILE##*/}
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - distribute $FILE ... "
-ansible new -m copy -a "src=./systemd-unit/$FILE dest=/etc/systemd/system"
+ansible new -m copy -a "src=${FULL_PATH_FILE} dest=${SYSTEMD}"
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - start $FILE ... "
 ansible new -m shell -a "systemctl daemon-reload"
 ansible new -m shell -a "systemctl enable $FILE"
