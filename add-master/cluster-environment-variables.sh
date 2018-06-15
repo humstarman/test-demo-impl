@@ -30,7 +30,7 @@ NET_ID=${NET_ID%.*}
 TOOLS=${URL}/tools
 getScript $TOOLS deal-env.sh
 getScript $TOOLS mk-env-conf.sh
-getScript $TOOLS put-node-ip.sh
+getScript $TOOLS put-this-ip.sh
 
 # 1 mk environment variables
 ENV=/var/env
