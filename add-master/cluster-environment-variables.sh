@@ -48,6 +48,7 @@ ansible new -m script -a "./put-this-ip.sh $NET_ID"
 ### - this scrript 
 ### - deploy-etcd.sh
 N_HEALTHY_ETCD=$(kubectl get componentstatus | grep etcd- | awk -F ' ' '{print $2}' | grep -E "^Healthy$" | wc -l)
+[ -d ./tmp ] || mkdir ./tmp
 if [[ "$N_HEALTHY_ETCD" < "$N_ETCD" ]]; then
   N2DEPLOY=$[${N_ETCD}-${N_HEALTHY_ETCD}]
   echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [WARN] - the current number of etcd nodes is ${N_HEALTHY_ETCD}, falling short of expecttion value ${N_ETCD}"
