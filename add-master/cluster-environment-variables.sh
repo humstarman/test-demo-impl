@@ -140,9 +140,12 @@ export ETCD_NODES=$ETCD_NODES
 export ETCD_ENDPOINTS=$ETCD_ENDPOINTS
 EOF
   if [[ ! "$[${N2DEPLOY}+1]" > "${N_NEW}" ]]; then
+    echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [DEBUG] - in rest if "
     IPS=$NEW
     N_FROM=$[${N2DEPLOY}+1]
     N_TO=$N_NEW
+    echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [DEBUG] - n-from: $N_FROM "
+    echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [DEBUG] - n-to: $N_TO "
     for i in $(seq -s ' ' ${N_FROM} ${N_TO}); do
       IP=$(echo $IPS | awk -v j=$i -F ' ' '{print $j}')
       ansible $IP -m copy -a "src=$FILE dest=/var/env/etcd.env"
