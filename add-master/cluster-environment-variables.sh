@@ -107,6 +107,8 @@ export NODE_IPS="$NODE_IPS"
 export ETCD_NODES=$ETCD_NODES
 export ETCD_ENDPOINTS=$ETCD_ENDPOINTS
 EOF
+    echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [DEBUG] - $IP "
+    echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [DEBUG] - in master loop "
     ansible $IP -m copy -a "src=$FILE dest=/var/env/etcd.env"
   done
   ## to new master that deploying etcd
@@ -124,6 +126,8 @@ export NODE_IPS="$NODE_IPS"
 export ETCD_NODES=$ETCD_NODES
 export ETCD_ENDPOINTS=$ETCD_ENDPOINTS
 EOF
+    echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [DEBUG] - $IP "
+    echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [DEBUG] - in new loop "
     ansible $IP -m copy -a "src=$FILE dest=/var/env/etcd.env"
   done
   ## to new master that not deploying etcd
