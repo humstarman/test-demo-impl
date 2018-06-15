@@ -23,7 +23,7 @@ if $NODE_EXISTENCE; then
   N_NODE=$(echo $NODE | wc | awk -F ' ' '{print $2}')
 fi
 NEW=$(sed s/","/" "/g ./new.csv)
-N_NEW=$(echo $MASTER | wc -w)
+N_NEW=$(echo $NEW | wc -w)
 NET_ID=$(cat ./master.csv)
 NET_ID=${NET_ID%%,*}
 NET_ID=${NET_ID%.*}

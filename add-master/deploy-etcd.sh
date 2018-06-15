@@ -35,7 +35,7 @@ if $NODE_EXISTENCE; then
   N_NODE=$(echo $NODE | wc | awk -F ' ' '{print $2}')
 fi
 NEW=$(sed s/","/" "/g ./new.csv)
-N_NEW=$(echo $MASTER | wc -w)
+N_NEW=$(echo $NEW | wc -w)
 
 # 1 determining if deploying etcd
 N_HEALTHY_ETCD=$(kubectl get componentstatus | grep etcd- | awk -F ' ' '{print $2}' | grep -E "^Healthy$" | wc -l)
