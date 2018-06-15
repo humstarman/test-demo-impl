@@ -82,7 +82,7 @@ N2SET=3
 MASTER=$(sed s/","/" "/g ./master.csv)
 N_MASTER=$(echo $MASTER | wc | awk -F ' ' '{print $2}')
 NEW=$(sed s/","/" "/g ./new.csv)
-N_NEW=$(echo $NEW | wc -l)
+N_NEW=$(echo $NEW | wc -w)
 N_TOTAL=$[${N_MASTER}+${N_NEW}]
 if [[ "${N_TOTAL}" > "$N2SET" ]]; then
   if [[ "$[${N_TOTAL}%2]" == "1" ]]; then
