@@ -6,7 +6,7 @@ TMP=/tmp/k8s-node-components
 [ -d "$TMP" ] && rm -rf $TMP
 mkdir -p $TMP
 cd $BIN && \
-  cp kubelet kube-proxy kubectl $TMP && \
+  cp kube-apiserver kube-controller-manager kube-scheduler kubelet kube-proxy kubectl $TMP && \
   cd - 
 ansible new -m copy -a "src=${TMP}/ dest=$BIN mode='a+x'"
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - Kubernetes node components distributed."

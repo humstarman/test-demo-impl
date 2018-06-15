@@ -176,9 +176,22 @@ ansible new -m shell -a "systemctl restart $FILE"
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - $FILE deployed."
 
 # 4 deply HA based on nginx
+NODE_EXISTENCE=true
+if [ ! -f ./node.csv ]; then
+  NODE_EXISTENCE=false
+else
+  if [ -z "$(cat ./node.csv)" ]; then
+    NODE_EXISTENCE=false
+  fi
+fi
+if ! $NODE_EXISTENCE; then
+  echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - no node existed."
+  exit 0
+fi
 COMPONENT=nginx-proxy
 ## 4.1 generate nginx.conf
 MASTER=$(sed s/","/" "/g ./master.csv)
+NEW=$(sed s/","/" "/g ./new.csv)
 DOCKER=$(which docker)
 NGINX_CONF_DIR=/etc/nginx
 FILE=nginx.conf
@@ -200,6 +213,10 @@ for ip in $MASTER; do
   cat >> $FILE << EOF
         server $ip:6443;
 EOF
+for ip in $NEW; do
+  cat >> $FILE << EOF
+        server $ip:6443;
+EOF
 done
 cat >> $FILE << EOF
     }
@@ -212,46 +229,12 @@ cat >> $FILE << EOF
     }
 }
 EOF
-ansible new -m shell -a "[ -d "$NGINX_CONF_DIR" ] || mkdir -p "$NGINX_CONF_DIR""
-ansible new -m copy -a "src=$FILE dest=$NGINX_CONF_DIR"
-## 4.2 generate nginx-proxy.service
-SYSTEMD=/etc/systemd/system
-TMP=/tmp/${COMPONENT}-systemd-unit
-[ -d "${TMP}" ] && rm -rf $TMP
-mkdir -p $TMP 
-FILE=$TMP/${COMPONENT}.service
-FULL_PATH_FILE=$TMP/${COMPONENT}.service
-cat > $FILE << EOF
-[Unit]
-Description=kubernetes apiserver docker wrapper
-Wants=docker.socket
-After=docker.service
-
-[Service]
-User=root
-PermissionsStartOnly=true
-ExecStart=$DOCKER run -p 6443:6443 \\
-          -v $NGINX_CONF_DIR:/etc/nginx \\
-          --name nginx-proxy \\
-          --network host \\
-          --restart on-failure:5 \\
-          --memory 512M \\
-          nginx:stable
-ExecStartPre=-$DOCKER rm -f nginx-proxy
-ExecStop=$DOCKER stop nginx-proxy
-Restart=always
-RestartSec=15s
-TimeoutStartSec=30s
-
-[Install]
-WantedBy=multi-user.target
-EOF
-FILE=${FILE##*/}
-echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - distribute $FILE ... "
-ansible new -m copy -a "src=${FULL_PATH_FILE} dest=${SYSTEMD}"
-echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - start $FILE ... "
-ansible new -m shell -a "systemctl daemon-reload"
-ansible new -m shell -a "systemctl enable $FILE"
-ansible new -m shell -a "systemctl restart $FILE"
-echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - HA nodes deployed."  
+ansible node -m shell -a "if [ -d "$NGINX_CONF_DIR" ]; then echo " - $NGINX_CONF_DIR already existed."; else mkdir -p "$NGINX_CONF_DIR"; fi"
+ansible node -m copy -a "src=$FILE dest=$NGINX_CONF_DIR"
+## 4.2 restart nginx-proxy.service
+FILE=${COMPONENT}.service
+echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - restart $FILE ... "
+ansible node -m shell -a "systemctl daemon-reload"
+ansible node -m shell -a "systemctl restart $FILE"
+echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - HA nodes restarted."  
 exit 0

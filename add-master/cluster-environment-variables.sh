@@ -57,12 +57,16 @@ if [[ "$N_HEALTHY_ETCD" < "$N_ETCD" ]]; then
   NODE_IPS=""
   ETCD_NODES=""
   ETCD_ENDPOINTS=""
+  ANSIBLE=/etc/ansible/hosts
+  echo '' >> $ANSIBLE
+  echo "[etcd]" >> $ANSIBLE
   # generate csv
   ## for previous master
   IPS=$MASTER
   N=${N_MASTER}
   for i in $(seq -s ' ' 1 $N); do
     IP=$(echo $IPS | awk -v j=$i -F ' ' '{print $j}')
+    echo $IP >> $ANSIBLE
     NODE_NAME="${NAME}-${IP}"
     NODE_IPS+=" $IP"
     ETCD_NODES+=",${NODE_NAME}=https://$IP:2380"
@@ -73,6 +77,7 @@ if [[ "$N_HEALTHY_ETCD" < "$N_ETCD" ]]; then
   N=${N2DEPLOY}
   for i in $(seq -s ' ' 1 $N); do
     IP=$(echo $IPS | awk -v j=$i -F ' ' '{print $j}')
+    echo $IP >> $ANSIBLE
     NODE_NAME="${NAME}-${IP}"
     NODE_IPS+=" $IP"
     ETCD_NODES+=",${NODE_NAME}=https://$IP:2380"
