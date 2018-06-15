@@ -24,6 +24,7 @@ if $NODE_EXISTENCE; then
 fi
 NEW=$(sed s/","/" "/g ./new.csv)
 N_NEW=$(echo $NEW | wc -w)
+echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [DEBUG] - n-new: $N_NEW "
 NET_ID=$(cat ./master.csv)
 NET_ID=${NET_ID%%,*}
 NET_ID=${NET_ID%.*}
