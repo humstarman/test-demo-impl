@@ -104,8 +104,8 @@ ETCD_NODES=""
 ETCD_ENDPOINTS=""
 
 for i in $(seq -s ' ' 1 $N); do
-  NODE_NAME="${NAME}-${i}"
   IP=$(echo $IPS | awk -v j=$i -F ' ' '{print $j}')
+  NODE_NAME="${NAME}-${IP}"
   NODE_IPS+=" $IP"
   ETCD_NODES+=",${NODE_NAME}=https://$IP:2380"
   ETCD_ENDPOINTS+=",https://$IP:2379"
