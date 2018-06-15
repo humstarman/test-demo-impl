@@ -120,11 +120,11 @@ ETCD_ENDPOINTS=${ETCD_ENDPOINTS#*,}
 #echo $ETCD_NODES
 
 for i in $(seq -s ' ' 1 $N); do
-  FILE="./tmp/etcd.env.${i}"
+  IP=$(echo $IPS | awk -v j=$i -F ' ' '{print $j}')
+  FILE="./tmp/etcd.env.${IP}"
   [ -e $FILE ] && rm -f $FILE
   [ -e $FILE ] || touch $FILE
-  NODE_NAME="${NAME}-${i}"
-  IP=$(echo $IPS | awk -v j=$i -F ' ' '{print $j}')
+  NODE_NAME="${NAME}-${IP}"
   cat > $FILE << EOF
 export NODE_NAME=$NODE_NAME
 export NODE_IPS="$NODE_IPS"
