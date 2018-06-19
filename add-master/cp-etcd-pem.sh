@@ -4,7 +4,7 @@ echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - cp CA pem ... "
 TMP=/tmp/etcd-ssl
 TO1=/etc/kubernetes/ssl
 TO2=/etc/etcd/ssl
-mkdir -p $FROM
+mkdir -p $TMP
 cd $TO2 && \
   cp etcd-key.pem etcd.pem $TMP && \
   cd -
