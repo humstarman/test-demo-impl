@@ -58,11 +58,13 @@ echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - etcd will be deployed on:
 for IP in $NEW; do
   if ansible etcd --list-hosts | grep ${IP}; then
     NEEDS+="$IP " 
-    ETCD+="$IP " 
-    echo " - $NEED"
-    echo "$NEED" >> $ANSIBLE
+    ETCD+=" $IP" 
+    echo " - $IP"
+    echo "$IP" >> $ANSIBLE
   fi
 done
+echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [DEBUG] - etcd: ${ETCD}"
+echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [DEBUG] - needs: ${NEEDS}"
 
 # 3 cp etcd binary files
 COMPONENT="etcd"
