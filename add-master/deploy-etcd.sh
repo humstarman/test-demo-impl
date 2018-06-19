@@ -99,7 +99,7 @@ for ip in $ETCD; do
   i=$[i+1]
   #echo $i
   ip=\"$ip\"
-  if [[ $i < $N_MASTER ]]; then
+  if [[ $i < $N_ETCD ]]; then
     ip+=,
   fi
   cat >> $FILE << EOF
