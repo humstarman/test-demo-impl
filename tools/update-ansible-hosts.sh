@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+ANSIBLE=/etc/ansible/hosts
 CSVS=$(ls | grep -E ".csv$")
 for CSV in $CSVS; do
   GROUP=$CSV
