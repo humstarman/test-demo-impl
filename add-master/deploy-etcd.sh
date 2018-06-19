@@ -177,7 +177,7 @@ WantedBy=multi-user.target
 EOF
 FILE=${FILE##*/}
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - distribute $FILE ... "
-ansible $GROUP -m copy -a "src=./systemd-unit/$FILE dest=/etc/systemd/system"
+ansible $GROUP -m copy -a "src=$TMP/$FILE dest=/etc/systemd/system"
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - start $FILE ... "
 ansible etcd -m shell -a "systemctl daemon-reload"
 ansible etcd -m shell -a "systemctl enable $FILE"
