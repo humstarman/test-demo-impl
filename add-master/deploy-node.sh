@@ -213,6 +213,7 @@ for ip in $MASTER; do
   cat >> $FILE << EOF
         server $ip:6443;
 EOF
+done
 for ip in $NEW; do
   cat >> $FILE << EOF
         server $ip:6443;
