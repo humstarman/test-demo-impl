@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 ANSIBLE=/etc/ansible/hosts
+[ -f "$ANSIBLE" ] && rm -f $ANSIBLE
+[ -f "$ANSIBLE" ] || touch $ANSIBLE
 CSVS=$(ls | grep -E ".csv$")
 for CSV in $CSVS; do
   GROUP=$CSV
