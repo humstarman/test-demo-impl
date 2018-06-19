@@ -15,8 +15,10 @@ MASTER=$(cat ./master.csv)
 MASTER+=","
 MASTER+=$(cat ./new.csv)
 rm -f ./new.csv
+echo $MASTER > ./master.csv
 
 # generate info.env
+MASTER=$(sed s/","/" "/g ./master.csv)
 N_MASTER=$(echo $MASTER | wc -w) 
 NODE_EXISTENCE=true
 if [ ! -f ./node.csv ]; then
@@ -39,4 +41,3 @@ export NODE="$NODE"
 export N_NODE=$N_NODE
 export URL=$URL
 EOF
-
