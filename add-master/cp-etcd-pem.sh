@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - cp CA pem ... "
+echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - cp etcd pem ... "
 TMP=/tmp/etcd-ssl
 TO1=/etc/kubernetes/ssl
 TO2=/etc/etcd/ssl
