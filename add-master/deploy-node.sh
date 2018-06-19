@@ -230,7 +230,7 @@ cat >> $FILE << EOF
     }
 }
 EOF
-ansible node -m shell -a "if [ -d "$NGINX_CONF_DIR" ]; then echo " - $NGINX_CONF_DIR already existed."; else mkdir -p "$NGINX_CONF_DIR"; fi"
+ansible node -m shell -a "if [ -d $NGINX_CONF_DIR ]; then echo  - $NGINX_CONF_DIR already existed.; else mkdir -p $NGINX_CONF_DIR; fi"
 ansible node -m copy -a "src=$FILE dest=$NGINX_CONF_DIR"
 ## 4.2 restart nginx-proxy.service
 FILE=${COMPONENT}.service
