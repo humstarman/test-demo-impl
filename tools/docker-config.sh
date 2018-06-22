@@ -69,6 +69,7 @@ cat > /etc/docker/daemon.json << EOF
     "172.0.0.0/8",
     "10.0.0.0/8"
   ],
+  "log-driver": "json-file",
   "debug" : true,
   "experimental" : true,
   "max-concurrent-downloads" : 10
