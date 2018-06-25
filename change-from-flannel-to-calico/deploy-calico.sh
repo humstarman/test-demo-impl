@@ -459,4 +459,4 @@ sed -i s^"{{cluster.cidr}}"^"${CLUSTER_CIDR}"^g $FILE
 kubectl create -f rbac.yaml
 kubectl create -f calico.yaml
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - calico deployed."
-exit o
+exit 0
