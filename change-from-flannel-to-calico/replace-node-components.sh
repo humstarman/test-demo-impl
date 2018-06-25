@@ -55,6 +55,9 @@ Requires=docker.service
 EnvironmentFile=-/var/env/env.conf
 WorkingDirectory=/var/lib/kubelet
 ExecStart=/usr/local/bin/kubelet \\
+  --network-plugin=cni \\
+  --cni-conf-dir=/etc/cni/net.d \\
+  --cni-bin-dir=/opt/cni/bin \\
   --fail-swap-on=false \\
   --pod-infra-container-image=registry.access.redhat.com/rhel7/pod-infrastructure:latest \\
   --cgroup-driver=cgroupfs \\
@@ -80,3 +83,38 @@ RestartSec=5
 [Install]
 WantedBy=multi-user.target
 EOF
+# 2.3 kube-proxy
+cat > kube-proxy.service << EOF
+[Unit]
+Description=Kubernetes Kube-Proxy Server
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+After=network.target
+
+[Service]
+EnvironmentFile=-/var/env/env.conf
+WorkingDirectory=/var/lib/kube-proxy
+ExecStart=/usr/local/bin/kube-proxy \\
+  --proxy-mode=iptables \\
+  --bind-address=\${NODE_IP} \\
+  --hostname-override=\${NODE_IP} \\
+  --cluster-cidr=\${SERVICE_CIDR} \\
+  --kubeconfig=/etc/kubernetes/kube-proxy.kubeconfig \\
+  --logtostderr=true \\
+  --masquerade-all \\
+  --v=2
+Restart=on-failure
+RestartSec=5
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
+EOF
+# 2.4 distribute & restart svc
+ansible all -m shell -a "systemctl daemon-reload"
+for COMPONENT in $COMPONENTS; do
+  echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - distribute $COMPONENT ..."
+  ansible all -m copy -a "src=./${COMPONENT}.service dest=/etc/systemd/system"
+  echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - restart $COMPONENT ..."
+  ansible all -m shell -a "systemctl enable $COMPONENT && systemctl restart $COMPONENT"
+done
+exit
