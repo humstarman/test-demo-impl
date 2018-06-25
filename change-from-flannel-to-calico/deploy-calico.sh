@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - install calico ..."
 # 0 set env
 :(){
@@ -299,7 +298,6 @@ spec:
   template:
     metadata:
       name: calico-kube-controllers
-      namespace: kube-system
       labels:
         k8s-app: calico-kube-controllers
     spec:
@@ -362,7 +360,8 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: calico-node
-namespace: kube-system
+  namespace: kube-system
+
 EOF
 ## 1.2 rbac.yaml
 cat > rbac.yaml <<EOF
@@ -429,6 +428,7 @@ subjects:
 - kind: ServiceAccount
   name: calico-node
   namespace: kube-system
+
 EOF
 # 2 change value according to environment
 # five variables in calico.yaml:
@@ -440,21 +440,21 @@ EOF
 FILE=calico.yaml
 SSL=/etc/kubernetes/ssl
 ## 2.1 etcd.enpoints
-sed -i s/"{{etcd.enpoints}}"/"${ETCD_ENDPOINTS}"/g $FILE
+sed -i s^"{{etcd.enpoints}}"^"${ETCD_ENDPOINTS}"^g $FILE
 ## 2.2 etcd-key.pem
 PEM="etcd-key.pem"
 BASE64=$(cat $SSL/$PEM | base64 | tr -d '\n')
-sed -i s/"{{${PEM}}}"/"${BASE64}"/g $FILE
+sed -i s^"{{${PEM}}}"^"${BASE64}"^g $FILE
 ## 2.3 etcd.pem
 PEM="etcd.pem"
 BASE64=$(cat $SSL/$PEM | base64 | tr -d '\n')
-sed -i s/"{{${PEM}}}"/"${BASE64}"/g $FILE
+sed -i s^"{{${PEM}}}"^"${BASE64}"^g $FILE
 ## 2.4 ca.pem
 PEM="ca.pem"
 BASE64=$(cat $SSL/$PEM | base64 | tr -d '\n')
-sed -i s/"{{${PEM}}}"/"${BASE64}"/g $FILE
+sed -i s^"{{${PEM}}}"^"${BASE64}"^g $FILE
 ## 2.5 cluster.cidr 
-sed -i s/"{{cluster.cidr}}"/"${CLUSTER_CIDR}"/g $FILE
+sed -i s^"{{cluster.cidr}}"^"${CLUSTER_CIDR}"^g $FILE
 # 3 deploy
 kubectl create -f rbac.yaml
 kubectl create -f calico.yaml
