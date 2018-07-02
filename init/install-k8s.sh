@@ -5,7 +5,7 @@ set -e
 # 1 download and install Kubernetes 
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - download kubernetes ... "
 # kubernetes-v3.3.2-linux-amd64.tar.gz
-KUBE_VER=v1.10.2
+KUBE_VER=v1.10.5
 URL=https://dl.k8s.io/$KUBE_VER
 if [ ! -f ./kubernetes-server-linux-amd64.tar.gz ]; then
   while true; do
