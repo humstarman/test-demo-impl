@@ -79,6 +79,7 @@ ExecStart=/bin/sh \
 [Install]
 WantedBy=multi-user.target
 EOF
+[ -d /etc/docker ] || mkdir -p /etc/docker
 cat > /etc/docker/daemon.json << EOF
 {
   "data-root": "$DOCKER",
