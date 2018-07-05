@@ -1,9 +1,9 @@
 #!/bin/bash
-
 set -e
+# 0 set env
+FLANNEL_VER=v0.10.0
 :(){
   FILES=$(find /var/env -name "*.env")
-
   if [ -n "$FILES" ]; then
     for FILE in $FILES
     do
@@ -11,11 +11,9 @@ set -e
     done
   fi
 };:
-
 # 1 download and install flannel 
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - download flannel ... "
 # flannel-v3.3.2-linux-amd64.tar.gz
-FLANNEL_VER=v0.10.0
 URL=https://github.com/coreos/flannel/releases/download/$FLANNEL_VER
 if [ ! -f flannel-$FLANNEL_VER-linux-amd64.tar.gz ]; then
   while true; do
@@ -40,7 +38,6 @@ if [[ ! -x "$(command -v flanneld)" || ! -x "$(command -v mk-docker-opts.sh)" ]]
 else
   echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - flannel already existed. "
 fi
-
 # 2 generate flannel pem
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - generate flannel pem ... "
 mkdir -p ./ssl/flanneld
@@ -64,18 +61,15 @@ cat > $FILE << EOF
   ]
 }
 EOF
-
 cd ./ssl/flanneld && \
   cfssl gencert -ca=/etc/kubernetes/ssl/ca.pem \
   -ca-key=/etc/kubernetes/ssl/ca-key.pem \
   -config=/etc/kubernetes/ssl/ca-config.json \
   -profile=kubernetes flanneld-csr.json | cfssljson -bare flanneld && \
   cd -
-
 # 3 distribute flannel pem
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - distribute flannel pem ... "
 ansible all -m copy -a "src=./ssl/flanneld/ dest=/etc/flanneld/ssl"
-
 # 4 put pod network info into etcd cluster
 /usr/local/bin/etcdctl \
   --endpoints=${ETCD_ENDPOINTS} \
@@ -83,7 +77,6 @@ ansible all -m copy -a "src=./ssl/flanneld/ dest=/etc/flanneld/ssl"
   --cert-file=/etc/flanneld/ssl/flanneld.pem \
   --key-file=/etc/flanneld/ssl/flanneld-key.pem \
   set ${FLANNEL_ETCD_PREFIX}/config '{"Network":"'${CLUSTER_CIDR}'", "SubnetLen": 24, "Backend": {"Type": "vxlan"}}'
-
 # 5 generate flannel systemd unit
 mkdir -p ./systemd-unit
 FILE=./systemd-unit/flanneld.service
