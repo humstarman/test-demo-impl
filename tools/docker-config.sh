@@ -8,7 +8,7 @@ USAGE
 exit 0
 }
 # Get Opts
-while getopts "hi:p:g:" opt; do # 选项后面的冒号表示该选项需要参数
+while getopts "hi:d:" opt; do # 选项后面的冒号表示该选项需要参数
     case "$opt" in
     h)  show_help
         ;;
@@ -23,7 +23,7 @@ while getopts "hi:p:g:" opt; do # 选项后面的冒号表示该选项需要参�
     esac
 done
 INSTALL=${INSTALL:-"false"}
-DOCKER=${INSTALL:-"/var/lib/docker"}
+DOCKER=${DOCKER:-"/var/lib/docker"}
 [ -d "$DOCKER" ] || mkdir -p $DOCKER
 if [ -x "$(command -v yum)" ]; then
   yum makecache
