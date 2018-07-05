@@ -1,7 +1,5 @@
 #!/bin/bash
-
 set -e
-
 # 1 download and install etcd 
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - download etcd ... "
 # etcd-v3.3.2-linux-amd64.tar.gz
@@ -29,7 +27,6 @@ if [[ ! -x "$(command -v etcd)" || ! -x "$(command -v etcdctl)" ]]; then
 else
   echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - etcd already existed. "
 fi
-
 # 2 generate TLS pem
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - generate etcd TLS pem ... "
 mkdir -p ./ssl/etcd
@@ -73,19 +70,16 @@ cat >> $FILE << EOF
   ]
 }
 EOF
-
 cd ./ssl/etcd && \
   cfssl gencert -ca=/etc/kubernetes/ssl/ca.pem \
   -ca-key=/etc/kubernetes/ssl/ca-key.pem \
   -config=/etc/kubernetes/ssl/ca-config.json \
   -profile=kubernetes etcd-csr.json | cfssljson -bare etcd && \
   cd -
-
 # 3 distribute etcd pem
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - distribute etcd pem ... "
 ansible all -m copy -a "src=ssl/etcd/ dest=/etc/etcd/ssl"
 ansible all -m copy -a "src=ssl/etcd/ dest=/etc/kubernetes/ssl"
-
 # 4 generate etcd systemd unit
 mkdir -p ./systemd-unit
 FILE=./systemd-unit/etcd.service
