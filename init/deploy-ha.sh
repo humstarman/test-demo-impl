@@ -11,9 +11,11 @@
   fi
 };:
 MASTERS="$(cat ./master.csv | tr ',' ' ')"
+echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - masters: $(echo $MASTERS)"
 CHK=${CHK:-"chk.sh"}
 VPORT=$KUBE_APISERVER
 VPORT=${VPORT##*':'}
+echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - virtual kube master server: https://${VIP}:${VPORT}"
 # 1 install vip
 FILE=/tmp/install-vip.sh
 cat > $FILE <<"EOF"
@@ -269,3 +271,4 @@ ansible $MASTER -m shell -a "systemctl enable haproxy"
 ansible $MASTER -m shell -a "systemctl restart haproxy" 
 ansible $MASTER -m shell -a "systemctl enable keepalived" 
 ansible $MASTER -m shell -a "systemctl restart keepalived" 
+echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - HA deployed."
