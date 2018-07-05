@@ -45,9 +45,7 @@ for MOD in $MODS; do
 done
 sysctl -p 
 EOF
-for MASTER in $MASTERS; do
-  ansible $MASTER -m script -a $FILE 
-done
+ansible master -m script -a $FILE 
 # 2 vip-mode
 FILE="vip-mode"
 BIN="${FILE}.sh"
@@ -90,9 +88,9 @@ WantedBy=multi-user.target
 EOF
 ansible master -m copy -a "src=/tmp/${BIN} dest=/usr/local/bin mode='a+x'"
 ansible master -m copy -a "src=/tmp/${SVC} dest=/etc/systemd/system"
-ansible master -m script -a "systemctl daemon-reload"
-ansible master -m script -a "systemctl enable ${SVC}"
-ansible master -m script -a "systemctl restart ${SVC}"
+ansible master -m shell -a "systemctl daemon-reload"
+ansible master -m shell -a "systemctl enable ${SVC}"
+ansible master -m shell -a "systemctl restart ${SVC}"
 # haproxy.cfg
 FILE=/tmp/haproxy.cfg
 cat > $FILE <<EOF
@@ -150,9 +148,7 @@ for MASTER in $MASTERS; do
 EOF
   i=$[i+1]
 done
-for MASTER in $MASTERS; do
-  ansible $MASTER -m copy -a "src=$FILE dest=/etc/haproxy"
-done
+ansible master -m copy -a "src=$FILE dest=/etc/haproxy"
 # keepalived.conf
 FILE=/tmp/keepalived.conf
 i=1
@@ -247,9 +243,7 @@ INTERFACE=${INTERFACE##*" "}
 sed -i s/"{{.interface}}"/"${INTERFACE}"/g $FILE
 EOF
 chmod +x $BIN
-for MASTER in $MASTERS; do
-  ansible $MASTER -m script -a $BIN
-done
+ansible master -m script -a $BIN
 # chk
 FILE=/tmp/${CHK}
 cat > $FILE <<"EOF"
@@ -263,12 +257,10 @@ fi
 exit 0
 EOF
 chmod +x $FILE
-for MASTER in $MASTERS; do
-  ansible $MASTER -m copy -a "src=$FILE dest=/etc/keepalived mode='a+x'"
-done
-ansible $MASTER -m shell -a "systemctl daemon-reload"
-ansible $MASTER -m shell -a "systemctl enable haproxy" 
-ansible $MASTER -m shell -a "systemctl restart haproxy" 
-ansible $MASTER -m shell -a "systemctl enable keepalived" 
-ansible $MASTER -m shell -a "systemctl restart keepalived" 
+ansible master -m copy -a "src=$FILE dest=/etc/keepalived mode='a+x'"
+ansible master -m shell -a "systemctl daemon-reload"
+ansible master -m shell -a "systemctl enable haproxy" 
+ansible master -m shell -a "systemctl restart haproxy" 
+ansible master -m shell -a "systemctl enable keepalived" 
+ansible master -m shell -a "systemctl restart keepalived" 
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - HA deployed."
