@@ -20,4 +20,4 @@ sed -i '/^#/d' $DEST
 # del blank
 sed -i '/^$/d' $DEST
 
-mv $DEST /var/env
+yes | mv $DEST /var/env
