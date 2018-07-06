@@ -132,25 +132,25 @@ echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - $FILE deployed."
 # 5 deploy kube-controller-manager
 mkdir -p ./systemd-unit
 FILE=./systemd-unit/kube-controller-manager.service
-cat > $FILE << EOF
+cat > $FILE <<"EOF"
 [Unit]
 Description=Kubernetes Controller Manager
 Documentation=https://github.com/GoogleCloudPlatform/kubernetes
 
 [Service]
 EnvironmentFile=-/var/env/env.conf
-ExecStart=/usr/local/bin/kube-controller-manager \\
-  --address=127.0.0.1 \\
-  --master=http://\${NODE_IP}:8080 \\
-  --allocate-node-cidrs=true \\
-  --service-cluster-ip-range=\${SERVICE_CIDR} \\
-  --cluster-cidr=\${CLUSTER_CIDR} \\
-  --cluster-name=kubernetes \\
-  --cluster-signing-cert-file=/etc/kubernetes/ssl/ca.pem \\
-  --cluster-signing-key-file=/etc/kubernetes/ssl/ca-key.pem \\
-  --service-account-private-key-file=/etc/kubernetes/ssl/ca-key.pem \\
-  --root-ca-file=/etc/kubernetes/ssl/ca.pem \\
-  --leader-elect=true \\
+ExecStart=/usr/local/bin/kube-controller-manager \
+  --address=127.0.0.1 \
+  --master=http://${NODE_IP}:8080 \
+  --allocate-node-cidrs=true \
+  --service-cluster-ip-range=${SERVICE_CIDR} \
+  --cluster-cidr=${CLUSTER_CIDR} \
+  --cluster-name=kubernetes \
+  --cluster-signing-cert-file=/etc/kubernetes/ssl/ca.pem \
+  --cluster-signing-key-file=/etc/kubernetes/ssl/ca-key.pem \
+  --service-account-private-key-file=/etc/kubernetes/ssl/ca-key.pem \
+  --root-ca-file=/etc/kubernetes/ssl/ca.pem \
+  --leader-elect=true \
   --v=2
 Restart=on-failure
 RestartSec=5
@@ -169,17 +169,17 @@ echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - $FILE deployed."
 # 6 deploy kube-scheduler-
 mkdir -p ./systemd-unit
 FILE=./systemd-unit/kube-scheduler.service
-cat > $FILE << EOF
+cat > $FILE <<"EOF"
 [Unit]
 Description=Kubernetes Scheduler
 Documentation=https://github.com/GoogleCloudPlatform/kubernetes
 
 [Service]
 EnvironmentFile=-/var/env/env.conf
-ExecStart=/usr/local/bin/kube-scheduler \\
-  --address=127.0.0.1 \\
-  --master=http://\${NODE_IP}:8080 \\
-  --leader-elect=true \\
+ExecStart=/usr/local/bin/kube-scheduler \
+  --address=127.0.0.1 \
+  --master=http://${NODE_IP}:8080 \
+  --leader-elect=true \
   --v=2
 Restart=on-failure
 RestartSec=5
