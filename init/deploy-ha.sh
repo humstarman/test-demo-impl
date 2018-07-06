@@ -11,6 +11,7 @@
   fi
 };:
 MASTERS="$(cat ./master.csv | tr ',' ' ')"
+echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - deploying HA, implemented by Haproxy and Keepalived ..."
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - masters: $(echo $MASTERS)"
 CHK=${CHK:-"chk.sh"}
 VPORT=$KUBE_APISERVER
