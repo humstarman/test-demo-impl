@@ -55,14 +55,19 @@ if cat $ANSIBLE | grep "\[$GROUP\]"; then
       FROM=$(echo $FROM | awk -F ' ' '{print $1}')
       TARGETS=$(sed -n -e /"^\["/= $ANSIBLE)
       FOUND_BIGGER=false
+      BIGGER=0
+      MIN=9999999
       for i in $TARGETS; do
         if [[ "$i" > "$FROM" ]]; then
-          TARGET=$i
+          BIGGER=$i
           FOUND_BIGGER=true
-          break;
+          if [[ "$BIGGER" < "$MIN" ]]; then
+            MIN=$BIGGER
+          fi
         fi
       done
       if $FOUND_BIGGER; then
+        TARGET=$MIN
         TO=$[$TARGET-1]
       else
         TO='$'
