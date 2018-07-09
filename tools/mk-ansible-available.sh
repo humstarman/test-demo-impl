@@ -35,35 +35,16 @@ function getScript(){
 
 # config /etc/ansible/hosts
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - config /etc/ansible/hosts."
-#cat > /etc/ansible/hosts << EOF
+getScript $TOOLS mk-ansible-hosts.sh
 ANSIBLE=/etc/ansible/hosts
-[ -f "$ANSIBLE" ] && rm -f $ANSIBLE
-[ -f "$ANSIBLE" ] || touch $ANSIBLE
 CSVS=$(ls | grep -E ".csv$")
-for CSV in $CSVS; do
-  GROUP=$CSV
-  GROUP=${GROUP##*/}
-  GROUP=${GROUP%.*}
-  cat >> $ANSIBLE << EOF 
-[$GROUP]
-EOF
-  MEMBERS=$(sed s/","/" "/g $CSV)
-  for MEMBER in $MEMBERS; do
-    echo $MEMBER >> $ANSIBLE
+if [ -n "$CSVS" ]; then
+  for CSV in $CSVS; do
+    GROUP=$CSV
+    GROUP=${GROUP##*/}
+    GROUP=${GROUP%.*}
+    ./mk-ansible-hosts.sh -g $GROUP -i $(cat $CSV) -a $ANSIBLE -o
   done
-  echo "" >> $ANSIBLE
-done
-if false; then
-echo "[master]" > $ANSIBLE
-for ip in $MASTER; do
-  echo $ip >> $ANSIBLE
-done
-if $NODE_EXISTENCE; then
-  echo "[node]" >> $ANSIBLE
-  for ip in $NODE; do
-    echo $ip >> $ANSIBLE
-  done
-fi
 fi
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - /etc/ansible/hosts configured."
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - check connectivity amongst hosts ..."
