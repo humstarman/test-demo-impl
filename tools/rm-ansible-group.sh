@@ -3,7 +3,7 @@ show_help () {
 cat << USAGE
 usage: $0 [ -g ANSIBLE-GROUP] [ -a ANSIBLE-HOST-FILE ]
     -g : Specify the ansible group to delete.
-    -a : Specify the ansible host file. If not specified, use '/etc/ansible/hosts' for default.
+    -a : Specify the ansible host file. If not specified, use '/etc/ansible/hosts' by default.
 USAGE
 exit 0
 }

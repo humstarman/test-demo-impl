@@ -2,8 +2,8 @@
 show_help () {
 cat << USAGE
 usage: $0 [ -i INSTALL-DOCKER-OR-NOT ] [ -d DOCKER-DATA-ROOT ] 
-    -i : Specify to install Docker or not. If not specified, use 'false' for default.
-    -d : Specify the 'data-root' for Docker. If not specified, use '/var/lib/docker' for default.
+    -i : Specify to install Docker or not. If not specified, use 'false' by default.
+    -d : Specify the 'data-root' for Docker. If not specified, use '/var/lib/docker' by default.
 USAGE
 exit 0
 }

@@ -4,8 +4,8 @@ cat << USAGE
 usage: $0 [ -i IP(S) ] [ -g ANSIBLE-GROUP ] [ -a ANSIBLE-HOST-FILE ] [ -o FORCE-WRITE ]
     -i : Specify the IP address(es) of the host(s), if multiple, set in term of csv.
     -g : Specify the ansible group to make.
-    -o : Overwrite the ansible group or not, no overwriting for default. 
-    -a : Specify the ansible host file. If not specified, use '/etc/ansible/hosts' for default.
+    -o : Overwrite the ansible group or not, no overwriting by default. 
+    -a : Specify the ansible host file. If not specified, use '/etc/ansible/hosts' by default.
 USAGE
 exit 0
 }

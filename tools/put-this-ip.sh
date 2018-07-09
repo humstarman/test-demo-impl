@@ -6,7 +6,7 @@ usage: $0 [ -n NET-ID ] [ -v VIRTUAL-IP ]
     -n : Specify the network ID. 
     -v : Specify the virtual IP address.
     -p : Specify the port used by the virtual Kubernetes master server.
-         if not specified, use '443' for default. 
+         if not specified, use '443' by default. 
 USAGE
 exit 0
 }
