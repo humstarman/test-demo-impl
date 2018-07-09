@@ -3,7 +3,7 @@ set -e
 # 1 download and install etcd 
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - download etcd ... "
 # etcd-v3.3.2-linux-amd64.tar.gz
-ETCD_VER=v3.3.2
+source ./version
 URL=https://github.com/coreos/etcd/releases/download/$ETCD_VER
 if [ ! -f etcd-$ETCD_VER-linux-amd64.tar.gz ]; then
   while true; do

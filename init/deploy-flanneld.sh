@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 # 0 set env
-FLANNEL_VER=v0.10.0
+source ./version
 :(){
   FILES=$(find /var/env -name "*.env")
   if [ -n "$FILES" ]; then

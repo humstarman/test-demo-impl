@@ -29,7 +29,7 @@ function getScript(){
 getScript $URL/tools docker-config.sh
 # 1 download and install docker 
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - download docker ... "
-DOCKER_VER=18.03.1
+source ./version
 URL=https://download.docker.com/linux/static/stable/x86_64
 if [ ! -f docker-${DOCKER_VER}-ce.tgz ]; then
   while true; do

@@ -3,7 +3,7 @@
 YEAR=1
 # 1 download and install CFSSL
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - download CFSSL ... "
-CFSSL_VER=R1.2
+source ./version
 URL=https://pkg.cfssl.org/$CFSSL_VER
 if [[ ! -f cfssl || ! -f cfssljson || ! -f cfssl-certinfo ]]; then
   while true; do

@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 # 0 set env
-KUBE_VER=v1.11.0
+source ./version
 # 1 download and install Kubernetes 
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - download kubernetes ... "
 #https://dl.k8s.io/v1.11.0/kubernetes-node-linux-amd64.tar.gz
