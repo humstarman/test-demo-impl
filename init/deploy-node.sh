@@ -50,7 +50,7 @@ else
   echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - docker already existed. "
 fi
 # 2 config docker
-ansible all -m script -a ./docker-config.sh
+ansible all -m script -a "./docker-config.sh -d /opt/docker"
 # 3 deploy docker
 mkdir -p ./systemd-unit
 FILE=./systemd-unit/docker.service
