@@ -54,22 +54,37 @@ ansible all -m script -a "./docker-config.sh -d /opt/docker"
 # 3 deploy docker
 mkdir -p ./systemd-unit
 FILE=./systemd-unit/docker.service
-cat > $FILE << EOF
+cat > $FILE <<"EOF"
 [Unit]
 Description=Docker Application Container Engine
-Documentation=http://docs.docker.io
+Documentation=https://docs.docker.com
+After=network-online.target firewalld.service
+Wants=network-online.target
 
 [Service]
-EnvironmentFile=-/run/flannel/docker
-ExecStart=/usr/local/bin/dockerd --log-level=error \$DOCKER_NETWORK_OPTIONS
-ExecReload=/bin/kill -s HUP \$MAINPID
-Restart=on-failure
-RestartSec=5
+Type=notify
+# the default is not to use systemd for cgroups because the delegate issues still
+# exists and systemd currently does not support the cgroup feature set required
+# for containers run by docker
+ExecStart=/usr/local/bin/dockerd
+ExecReload=/bin/kill -s HUP $MAINPID
+# Having non-zero Limit*s causes performance problems due to accounting overhead
+# in the kernel. We recommend using cgroups to do container-local accounting.
 LimitNOFILE=infinity
 LimitNPROC=infinity
 LimitCORE=infinity
+# Uncomment TasksMax if your systemd version supports it.
+# Only systemd 226 and above support this version.
+#TasksMax=infinity
+TimeoutStartSec=0
+# set delegate yes so that systemd does not reset the cgroups of docker containers
 Delegate=yes
+# kill only the docker process, not all processes in the cgroup
 KillMode=process
+# restart the docker process if it exits prematurely
+Restart=on-failure
+StartLimitBurst=3
+StartLimitInterval=60s
 
 [Install]
 WantedBy=multi-user.target
@@ -135,7 +150,7 @@ ansible all -m script -a ./$FILE
 ##  generate kubelet systemd unit
 mkdir -p ./systemd-unit
 FILE=./systemd-unit/kubelet.service
-cat > $FILE << EOF
+cat > $FILE <<"EOF"
 [Unit]
 Description=Kubernetes Kubelet
 Documentation=https://github.com/GoogleCloudPlatform/kubernetes
@@ -145,22 +160,25 @@ Requires=docker.service
 [Service]
 EnvironmentFile=-/var/env/env.conf
 WorkingDirectory=/var/lib/kubelet
-ExecStart=/usr/local/bin/kubelet \\
-  --fail-swap-on=false \\
-  --pod-infra-container-image=registry.access.redhat.com/rhel7/pod-infrastructure:latest \\
-  --cgroup-driver=cgroupfs \\
-  --address=\${NODE_IP} \\
-  --hostname-override=\${NODE_IP} \\
-  --bootstrap-kubeconfig=/etc/kubernetes/bootstrap.kubeconfig \\
-  --kubeconfig=/etc/kubernetes/kubelet.kubeconfig \\
-  --cert-dir=/etc/kubernetes/ssl \\
-  --cluster-dns=\${CLUSTER_DNS_SVC_IP} \\
-  --cluster-domain=\${CLUSTER_DNS_DOMAIN} \\
-  --hairpin-mode promiscuous-bridge \\
-  --allow-privileged=true \\
-  --serialize-image-pulls=false \\
-  --logtostderr=true \\
-  --pod-manifest-path=/etc/kubernetes/manifests \\
+ExecStart=/usr/local/bin/kubelet \
+  --network-plugin=cni \
+  --cni-conf-dir=/etc/cni/net.d \
+  --cni-bin-dir=/opt/cni/bin \
+  --fail-swap-on=false \
+  --pod-infra-container-image=registry.access.redhat.com/rhel7/pod-infrastructure:latest \
+  --cgroup-driver=cgroupfs \
+  --address=${NODE_IP} \
+  --hostname-override=${NODE_IP} \
+  --bootstrap-kubeconfig=/etc/kubernetes/bootstrap.kubeconfig \
+  --kubeconfig=/etc/kubernetes/kubelet.kubeconfig \
+  --cert-dir=/etc/kubernetes/ssl \
+  --cluster-dns=${CLUSTER_DNS_SVC_IP} \
+  --cluster-domain=${CLUSTER_DNS_DOMAIN} \
+  --hairpin-mode promiscuous-bridge \
+  --allow-privileged=true \
+  --serialize-image-pulls=false \
+  --logtostderr=true \
+  --pod-manifest-path=/etc/kubernetes/manifests \
   --v=2
 ExecStartPost=/sbin/iptables -A INPUT -s 10.0.0.0/8 -p tcp --dport 4194 -j ACCEPT
 ExecStartPost=/sbin/iptables -A INPUT -s 172.17.0.0/12 -p tcp --dport 4194 -j ACCEPT
@@ -252,7 +270,7 @@ ansible all -m script -a ./$FILE
 ##  generate kube-proxy systemd unit
 mkdir -p ./systemd-unit
 FILE=./systemd-unit/kube-proxy.service
-cat > $FILE << EOF
+cat > $FILE <<"EOF"
 [Unit]
 Description=Kubernetes Kube-Proxy Server
 Documentation=https://github.com/GoogleCloudPlatform/kubernetes
@@ -261,13 +279,14 @@ After=network.target
 [Service]
 EnvironmentFile=-/var/env/env.conf
 WorkingDirectory=/var/lib/kube-proxy
-ExecStart=/usr/local/bin/kube-proxy \\
-  --bind-address=\${NODE_IP} \\
-  --hostname-override=\${NODE_IP} \\
-  --cluster-cidr=\${SERVICE_CIDR} \\
-  --kubeconfig=/etc/kubernetes/kube-proxy.kubeconfig \\
-  --logtostderr=true \\
-  --masquerade-all \\
+ExecStart=/usr/local/bin/kube-proxy \
+  --bind-address=${NODE_IP} \
+  --hostname-override=${NODE_IP} \
+  --cluster-cidr=${SERVICE_CIDR} \
+  --kubeconfig=/etc/kubernetes/kube-proxy.kubeconfig \
+  --logtostderr=true \
+  --proxy-mode=iptables \
+  --masquerade-all \
   --v=2
 Restart=on-failure
 RestartSec=5
