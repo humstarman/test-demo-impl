@@ -11,20 +11,22 @@ echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - install calico ..."
   fi
 };:
 source info.env
+MANIFEST=${URL}/manifest
 # 1 download 
 CALICO_PATH=calico
 mkdir -p ${CALICO_PATH}  
 cd ${CALICO_PATH} && \
-  curl -s -O $URL/${CALICO_PATH}/Makefile && \
+  curl -s -O ${MANIFEST}/${CALICO_PATH}/Makefile && \
   cd -
 CALICO_MANIFEST_PATH=calico/manifest
-mkdir -p ${CALICO_MANIFEST_PATH}  
+mkdir -p ${CALICO_MANIFEST_PATH}
 cd ${CALICO_MANIFEST_PATH} && \
-  curl -s -O $URL/${CALICO_MANIFEST_PATH}/calicoctl.cfg.sed && \
-  curl -s -O $URL/${CALICO_MANIFEST_PATH}/calico.yaml.sed && \
-  curl -s -O $URL/${CALICO_MANIFEST_PATH}/rbac.yaml.sed && \
+  curl -s -O ${MANIFEST}/${CALICO_MANIFEST_PATH}/calicoctl.cfg.sed && \
+  curl -s -O ${MANIFEST}/${CALICO_MANIFEST_PATH}/calico.yaml.sed && \
+  curl -s -O ${MANIFEST}/${CALICO_MANIFEST_PATH}/rbac.yaml.sed && \
   cd -
 # 2 make
 cd ${CALICO_PATH} && \
   make all && \
-  cd -
+  cd - 
+echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - calico installed."
