@@ -16,7 +16,7 @@ MANIFEST=${URL}/manifest
 CALICO_PATH=calico
 mkdir -p ${CALICO_PATH}  
 cd ${CALICO_PATH} && \
-  curl -s -O ${MANIFEST}/${CALICO_PATH}/Makefile && \
+  curl -s -O ${MANIFEST}/${CALICO_PATH}/Makefile.sed && \
   cd -
 CALICO_MANIFEST_PATH=calico/manifest
 mkdir -p ${CALICO_MANIFEST_PATH}
@@ -25,7 +25,12 @@ cd ${CALICO_MANIFEST_PATH} && \
   curl -s -O ${MANIFEST}/${CALICO_MANIFEST_PATH}/calico.yaml.sed && \
   curl -s -O ${MANIFEST}/${CALICO_MANIFEST_PATH}/rbac.yaml.sed && \
   cd -
-# 2 make
+# 2 sed
+cd ${CALICO_PATH} && \
+  cp Makefile.sed Makefile && \
+  sed -i s?"{{.env.cluster.cidr}}"?"${CLUSTER_CIDR}"?g Makefile && \
+  cd - 
+# 3 make
 cd ${CALICO_PATH} && \
   make all && \
   cd - 
