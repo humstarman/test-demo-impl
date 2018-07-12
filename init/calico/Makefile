@@ -8,7 +8,7 @@ SSL=/etc/kubernetes/ssl
 ETCD_KEY_PEM=`cat ${SSL}/etcd-key.pem | base64 | tr -d '\n'`
 ETCD_PEM=`cat ${SSL}/etcd.pem | base64 | tr -d '\n'`
 CA_PEM=`cat ${SSL}/ca.pem | base64 | tr -d '\n'`
-CLUSTER_CIDR="172.30.0.0/16"
+#CLUSTER_CIDR="172.30.0.0/16"
 
 sed:
 	@yes | cp ./manifest/rbac.yaml.sed ./manifest/rbac.yaml
