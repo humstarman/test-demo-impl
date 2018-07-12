@@ -13,25 +13,25 @@ echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - install calico ..."
 source info.env
 MANIFEST=${URL}/manifest
 # 1 download 
-CALICO_PATH=calico
-mkdir -p ${CALICO_PATH}  
-cd ${CALICO_PATH} && \
-  curl -s -O ${MANIFEST}/${CALICO_PATH}/Makefile.sed && \
+BASE_PATH=calico
+mkdir -p ${BASE_PATH}  
+cd ${BASE_PATH} && \
+  curl -s -O ${MANIFEST}/${BASE_PATH}/Makefile.sed && \
   cd -
-CALICO_MANIFEST_PATH=calico/manifest
-mkdir -p ${CALICO_MANIFEST_PATH}
-cd ${CALICO_MANIFEST_PATH} && \
-  curl -s -O ${MANIFEST}/${CALICO_MANIFEST_PATH}/calicoctl.cfg.sed && \
-  curl -s -O ${MANIFEST}/${CALICO_MANIFEST_PATH}/calico.yaml.sed && \
-  curl -s -O ${MANIFEST}/${CALICO_MANIFEST_PATH}/rbac.yaml.sed && \
+MANIFEST_PATH=calico/manifest
+mkdir -p ${MANIFEST_PATH}
+cd ${MANIFEST_PATH} && \
+  curl -s -O ${MANIFEST}/${MANIFEST_PATH}/calicoctl.cfg.sed && \
+  curl -s -O ${MANIFEST}/${MANIFEST_PATH}/calico.yaml.sed && \
+  curl -s -O ${MANIFEST}/${MANIFEST_PATH}/rbac.yaml.sed && \
   cd -
 # 2 sed
-cd ${CALICO_PATH} && \
+cd ${BASE_PATH} && \
   cp Makefile.sed Makefile && \
   sed -i s?"{{.env.cluster.cidr}}"?"${CLUSTER_CIDR}"?g Makefile && \
   cd - 
 # 3 make
-cd ${CALICO_PATH} && \
+cd ${BASE_PATH} && \
   make all && \
   cd - 
 echo "$(date -d today +'%Y-%m-%d %H:%M:%S') - [INFO] - calico installed."
