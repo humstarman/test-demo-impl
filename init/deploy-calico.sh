@@ -134,7 +134,7 @@ spec:
         # container programs network policy and routes on each
         # host.
         - name: calico-node
-          image: quay.io/calico/node:v3.0.1
+          image: lowyard/calico-node:v3.0.1
           env:
             # The location of the Calico etcd cluster.
             - name: ETCD_ENDPOINTS
@@ -228,7 +228,7 @@ spec:
         # This container installs the Calico CNI binaries
         # and CNI network config file on each node.
         - name: install-cni
-          image: quay.io/calico/cni:v2.0.0
+          image: lowyard/calico-cni:v2.0.0
           command: ["/install-cni.sh"]
           env:
             # Name of the CNI config file to create.
@@ -306,7 +306,7 @@ spec:
       serviceAccountName: calico-kube-controllers
       containers:
         - name: calico-kube-controllers
-          image: quay.io/calico/kube-controllers:v2.0.0
+          image: lowyard/calico-kube-controllers:v2.0.0
           env:
             # The location of the Calico etcd cluster.
             - name: ETCD_ENDPOINTS
